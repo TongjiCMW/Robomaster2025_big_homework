@@ -193,7 +193,7 @@ extern "C" void buzzer_task()
   power_on_beep();
   //error_sound_mario_death();
   //error_sound_imperial_march();
-  //lemon_intro_sound();
-  // 任务主循环 - 等待其他任务调用报错函数
+  //error_sound_lemon_intro_sound();
+
   vTaskDelete(NULL);  //这里完成一遍后把自己删掉,不然就轧钢了卡死了
 }
