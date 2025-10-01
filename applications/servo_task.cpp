@@ -15,4 +15,5 @@ extern "C" void servo_task()
     servo.set(angle);
     osDelay(1000);
   }
+  vTaskDelete(NULL);//这里完成一遍后把自己删掉,不然就轧钢了卡死了
 }
