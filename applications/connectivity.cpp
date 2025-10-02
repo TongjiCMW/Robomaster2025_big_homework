@@ -38,6 +38,7 @@ extern "C" void HAL_UART_ErrorCallback(UART_HandleTypeDef * huart)
     remote_controller.request();
   }
 }
+
 //CAN接收中断回调函数 读取电机数据
 extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan)
 {
