@@ -14,19 +14,21 @@ extern sp::RM_Motor motor3508_3;
 extern sp::RM_Motor motor3508_4;
 //初始化电机pid控制器以及电机运动数据
 //                             dt     kp    ki    kd    mo   mio   alpha  ang? dynamic?
-sp::PID motor3508_1_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 1.5f, 0.0f, 1.0f, false, true);
+sp::PID motor3508_1_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
 MovingData motor3508_1_data;
 
-sp::PID motor3508_2_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 1.5f, 0.0f, 1.0f, false, true);
+sp::PID motor3508_2_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
 MovingData motor3508_2_data;
 
-sp::PID motor3508_3_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 1.5f, 0.0f, 1.0f, false, true);
+sp::PID motor3508_3_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
 MovingData motor3508_3_data;
 
-sp::PID motor3508_4_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 1.5f, 0.0f, 1.0f, false, true);
+sp::PID motor3508_4_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
 MovingData motor3508_4_data;
 
 float temp_speed;
+float max_rotate_speed = 5.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应转速为6PI rad/s
+
 extern "C" void control_task()
 {
   remote_controller.request();  //这里开始的时候要初始化,等待接收第一帧
@@ -45,38 +47,35 @@ extern "C" void control_task()
   motor3508_4_data.given_torque = 0.0f;
 
   temp_speed = 10.0f;
+
   while (true) {
     // 使用调试(f5)查看remote_controller内部变量的变化
     //这里执行遥控器控制任务
+
+    //首先我们解算遥控器的输入对应的麦轮线速度
+    //假设遥控器输入拉满的时候,对应转速为6PI rad/s
+    //其中麦轮的半径r = 0.077m
+    //                              前后                            左右                          旋转
+    motor3508_1_data.absolute_speed_set = max_rotate_speed * remote_controller.ch_lv +
+                                          max_rotate_speed * remote_controller.ch_lh +
+                                          max_rotate_speed * remote_controller.ch_rh;
+    motor3508_2_data.absolute_speed_set = max_rotate_speed * -remote_controller.ch_lv +
+                                          max_rotate_speed * remote_controller.ch_lh +
+                                          max_rotate_speed * remote_controller.ch_rh;
+
+    motor3508_3_data.absolute_speed_set = max_rotate_speed * -remote_controller.ch_lv +
+                                          max_rotate_speed * -remote_controller.ch_lh +
+                                          max_rotate_speed * remote_controller.ch_rh;
+    motor3508_4_data.absolute_speed_set = max_rotate_speed * remote_controller.ch_lv +
+                                          max_rotate_speed * -remote_controller.ch_lh +
+                                          max_rotate_speed * remote_controller.ch_rh;
+
     switch (remote_controller.sw_r) {
       case sp::DBusSwitchMode::UP:
-        motor3508_1_data.absolute_speed_set = -temp_speed;
-        motor3508_2_data.absolute_speed_set = -temp_speed;
-        motor3508_3_data.absolute_speed_set = -temp_speed;
-        motor3508_4_data.absolute_speed_set = -temp_speed;
-
-        motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
-        motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
-        motor3508_1.cmd(motor3508_1_data.given_torque);
-
-        motor3508_2_pid_speed.calc(motor3508_2_data.absolute_speed_set, motor3508_2.speed);
-        motor3508_2_data.given_torque = motor3508_2_pid_speed.out;
-        motor3508_2.cmd(motor3508_2_data.given_torque);
-
-        motor3508_3_pid_speed.calc(motor3508_3_data.absolute_speed_set, motor3508_3.speed);
-        motor3508_3_data.given_torque = motor3508_3_pid_speed.out;
-        motor3508_3.cmd(motor3508_3_data.given_torque);
-
-        motor3508_4_pid_speed.calc(motor3508_4_data.absolute_speed_set, motor3508_4.speed);
-        motor3508_4_data.given_torque = motor3508_4_pid_speed.out;
-        motor3508_4.cmd(motor3508_4_data.given_torque);
+        //这里之后会写成电容使用策略
         break;
 
       case sp::DBusSwitchMode::MID:
-        motor3508_1_data.absolute_speed_set = temp_speed;
-        motor3508_2_data.absolute_speed_set = temp_speed;
-        motor3508_3_data.absolute_speed_set = temp_speed;
-        motor3508_4_data.absolute_speed_set = temp_speed;
 
         motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
         motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
