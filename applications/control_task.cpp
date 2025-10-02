@@ -13,7 +13,7 @@ extern sp::RM_Motor motor3508_1;
 
 //初始化电机pid控制器以及电机运动数据
 //                             dt     kp    ki    kd    mo   mio   alpha  ang? dynamic?
-sp::PID motor3508_1_pid_speed(0.001f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, false, true);
+sp::PID motor3508_1_pid_speed(0.001f, 0.6f, 0.0f, 0.0f, 0.25f, 0.0f, 1.0f, false, true);
 MovingData motor3508_1_data;
 
 extern "C" void control_task()
@@ -28,7 +28,7 @@ extern "C" void control_task()
 
   //电机运动数据初始化
 
-  motor3508_1_data.absolute_speed_set = 0.0f;
+  motor3508_1_data.absolute_speed_set = 6.28f;
   motor3508_1_data.given_torque = 0.0f;
   motor3508_1_data.given_voltage = 0.0f;
 
@@ -37,23 +37,25 @@ extern "C" void control_task()
     //这里执行遥控器控制任务
     switch (remote_controller.sw_r) {
       case sp::DBusSwitchMode::UP:
-        motor3508_1.cmd(0.2f);
+        motor3508_1_data.given_torque = 0.2f;
+        motor3508_1.cmd(motor3508_1_data.given_torque);
         break;
       case sp::DBusSwitchMode::MID:
-        motor3508_1.cmd(0.15f);
-
-        //motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
-        //motor3508_1_data.given_voltage = motor3508_1_pid_speed.out;
-
+        motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
+        motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
+        motor3508_1.cmd(motor3508_1_data.given_torque);
         break;
+
         //约定右down挡时全部电机失能
+        //这里一定是失能而不应该是急刹车
       case sp::DBusSwitchMode::DOWN:
-        motor3508_1.cmd(0.0f);
+        motor3508_1_data.given_torque = 0.0f;
+        motor3508_1.cmd(motor3508_1_data.given_torque);
         break;
       default:
         break;
     }
-    //motor3508_1.cmd(motor3508_1_data.given_voltage);
+
     motor3508_1.write(can2.tx_data);
     can2.send(motor3508_1.tx_id);
     osDelay(10);
