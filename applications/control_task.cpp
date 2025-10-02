@@ -9,12 +9,24 @@ extern sp::DBus remote_controller;
 extern sp::CAN can2;
 
 extern sp::RM_Motor motor3508_1;
-
+extern sp::RM_Motor motor3508_2;
+extern sp::RM_Motor motor3508_3;
+extern sp::RM_Motor motor3508_4;
 //初始化电机pid控制器以及电机运动数据
 //                             dt     kp    ki    kd    mo   mio   alpha  ang? dynamic?
 sp::PID motor3508_1_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 1.5f, 0.0f, 1.0f, false, true);
 MovingData motor3508_1_data;
 
+sp::PID motor3508_2_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 1.5f, 0.0f, 1.0f, false, true);
+MovingData motor3508_2_data;
+
+sp::PID motor3508_3_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 1.5f, 0.0f, 1.0f, false, true);
+MovingData motor3508_3_data;
+
+sp::PID motor3508_4_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 1.5f, 0.0f, 1.0f, false, true);
+MovingData motor3508_4_data;
+
+float temp_speed;
 extern "C" void control_task()
 {
   remote_controller.request();  //这里开始的时候要初始化,等待接收第一帧
@@ -27,22 +39,60 @@ extern "C" void control_task()
 
   //电机运动数据初始化
 
-  motor3508_1_data.absolute_speed_set = 12.56f;
   motor3508_1_data.given_torque = 0.0f;
-  motor3508_1_data.given_voltage = 0.0f;
+  motor3508_2_data.given_torque = 0.0f;
+  motor3508_3_data.given_torque = 0.0f;
+  motor3508_4_data.given_torque = 0.0f;
 
+  temp_speed = 9.42f;
   while (true) {
     // 使用调试(f5)查看remote_controller内部变量的变化
     //这里执行遥控器控制任务
     switch (remote_controller.sw_r) {
       case sp::DBusSwitchMode::UP:
-        motor3508_1_data.given_torque = 0.2f;
-        motor3508_1.cmd(motor3508_1_data.given_torque);
-        break;
-      case sp::DBusSwitchMode::MID:
+        motor3508_1_data.absolute_speed_set = -temp_speed;
+        motor3508_2_data.absolute_speed_set = -temp_speed;
+        motor3508_3_data.absolute_speed_set = -temp_speed;
+        motor3508_4_data.absolute_speed_set = -temp_speed;
+
         motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
         motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
         motor3508_1.cmd(motor3508_1_data.given_torque);
+
+        motor3508_2_pid_speed.calc(motor3508_2_data.absolute_speed_set, motor3508_2.speed);
+        motor3508_2_data.given_torque = motor3508_2_pid_speed.out;
+        motor3508_2.cmd(motor3508_2_data.given_torque);
+
+        motor3508_3_pid_speed.calc(motor3508_3_data.absolute_speed_set, motor3508_3.speed);
+        motor3508_3_data.given_torque = motor3508_3_pid_speed.out;
+        motor3508_3.cmd(motor3508_3_data.given_torque);
+
+        motor3508_4_pid_speed.calc(motor3508_4_data.absolute_speed_set, motor3508_4.speed);
+        motor3508_4_data.given_torque = motor3508_4_pid_speed.out;
+        motor3508_4.cmd(motor3508_4_data.given_torque);
+        break;
+
+      case sp::DBusSwitchMode::MID:
+        motor3508_1_data.absolute_speed_set = temp_speed;
+        motor3508_2_data.absolute_speed_set = temp_speed;
+        motor3508_3_data.absolute_speed_set = temp_speed;
+        motor3508_4_data.absolute_speed_set = temp_speed;
+
+        motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
+        motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
+        motor3508_1.cmd(motor3508_1_data.given_torque);
+
+        motor3508_2_pid_speed.calc(motor3508_2_data.absolute_speed_set, motor3508_2.speed);
+        motor3508_2_data.given_torque = motor3508_2_pid_speed.out;
+        motor3508_2.cmd(motor3508_2_data.given_torque);
+
+        motor3508_3_pid_speed.calc(motor3508_3_data.absolute_speed_set, motor3508_3.speed);
+        motor3508_3_data.given_torque = motor3508_3_pid_speed.out;
+        motor3508_3.cmd(motor3508_3_data.given_torque);
+
+        motor3508_4_pid_speed.calc(motor3508_4_data.absolute_speed_set, motor3508_4.speed);
+        motor3508_4_data.given_torque = motor3508_4_pid_speed.out;
+        motor3508_4.cmd(motor3508_4_data.given_torque);
         break;
 
         //约定右down挡时全部电机失能
@@ -50,13 +100,23 @@ extern "C" void control_task()
       case sp::DBusSwitchMode::DOWN:
         motor3508_1_data.given_torque = 0.0f;
         motor3508_1.cmd(motor3508_1_data.given_torque);
+        motor3508_2_data.given_torque = 0.0f;
+        motor3508_2.cmd(motor3508_2_data.given_torque);
+        motor3508_3_data.given_torque = 0.0f;
+        motor3508_3.cmd(motor3508_3_data.given_torque);
+        motor3508_4_data.given_torque = 0.0f;
+        motor3508_4.cmd(motor3508_4_data.given_torque);
         break;
       default:
         break;
     }
 
     motor3508_1.write(can2.tx_data);
-    can2.send(motor3508_1.tx_id);
+    motor3508_2.write(can2.tx_data);
+    motor3508_3.write(can2.tx_data);
+    motor3508_4.write(can2.tx_data);
+
+    can2.send(motor3508_1.tx_id);  //这里1-4电机直接用0x200的id发送
     osDelay(10);
   }
 }
