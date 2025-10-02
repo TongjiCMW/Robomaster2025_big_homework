@@ -12,10 +12,10 @@ sp::DBus remote_controller(&huart3);
 // sp::DBus remote(&huart5, false);
 
 // CAN1总线实例化
-sp::CAN can1(&hcan1);
+sp::CAN can1(&hcan2);
 
 // 电机实例化
-sp::RM_Motor motor6020_1(1, sp::RM_Motors::GM6020_V);
+sp::RM_Motor motor6020_1(1, sp::RM_Motors::M3508, 14.9f);
 /*
 sp::RM_Motor motor3508_1(1, sp::RM_Motors::RM3508, 14.9f);
 a. 麦轮底盘数据：⻨轮直径154mm，⻨轮横向间距370mm，纵向间距330mm。
@@ -44,7 +44,7 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan)
   auto stamp_ms = osKernelSysTick();
 
   while (HAL_CAN_GetRxFifoFillLevel(hcan, CAN_RX_FIFO0) > 0) {
-    if (hcan == &hcan1) {
+    if (hcan == &hcan2) {
       can1.recv();
 
       if (can1.rx_id == motor6020_1.rx_id) motor6020_1.read(can1.rx_data, stamp_ms);

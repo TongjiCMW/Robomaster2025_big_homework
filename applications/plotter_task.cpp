@@ -5,13 +5,13 @@
 #include "motor/rm_motor/rm_motor.hpp"
 
 extern sp::DBus remote_controller;
-
+extern sp::RM_Motor motor6020_1;
 sp::Plotter plotter(&huart1);
 
 extern "C" void plotter_task()
 {
   while (true) {
-    plotter.plot(remote_controller.ch_lh);
+    plotter.plot(remote_controller.ch_lh, motor6020_1.speed);
     osDelay(10);  // 100Hz
   }
 }

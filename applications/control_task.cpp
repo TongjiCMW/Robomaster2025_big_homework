@@ -37,10 +37,10 @@ extern "C" void control_task()
     //这里执行遥控器控制任务
     switch (remote_controller.sw_r) {
       case sp::DBusSwitchMode::UP:
-        motor6020_1.cmd(5.5f);
+        motor6020_1.cmd(0.2f);
         break;
       case sp::DBusSwitchMode::MID:
-        motor6020_1.cmd(2.0f);
+        motor6020_1.cmd(0.15f);
 
         //motor6020_1_pid_speed.calc(motor6020_1_data.absolute_speed_set, motor6020_1.speed);
         //motor6020_1_data.given_voltage = motor6020_1_pid_speed.out;
