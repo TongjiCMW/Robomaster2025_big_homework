@@ -55,6 +55,7 @@ extern "C" void control_task()
     //首先我们解算遥控器的输入对应的麦轮线速度
     //假设遥控器输入拉满的时候,对应转速为6PI rad/s
     //其中麦轮的半径r = 0.077m
+
     //                              前后                            左右                          旋转
     motor3508_1_data.absolute_speed_set = max_rotate_speed * remote_controller.ch_lv +
                                           max_rotate_speed * remote_controller.ch_lh +
@@ -108,6 +109,16 @@ extern "C" void control_task()
         break;
       default:
         break;
+    }
+
+    if (
+      remote_controller.ch_lv <= 0.01f && remote_controller.ch_lv >= -0.01f &&
+      remote_controller.ch_lh <= 0.01f && remote_controller.ch_lh >= -0.01f &&
+      remote_controller.ch_rh <= 0.01f && remote_controller.ch_rh >= -0.01f) {
+      motor3508_1.cmd(0.0f);
+      motor3508_2.cmd(0.0f);
+      motor3508_3.cmd(0.0f);
+      motor3508_4.cmd(0.0f);
     }
 
     motor3508_1.write(can2.tx_data);
