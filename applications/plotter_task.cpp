@@ -6,12 +6,15 @@
 
 extern sp::DBus remote_controller;
 extern sp::RM_Motor motor3508_1;
+extern sp::RM_Motor motor3508_2;
+extern sp::RM_Motor motor3508_3;
+extern sp::RM_Motor motor3508_4;
 sp::Plotter plotter(&huart1);
 
 extern "C" void plotter_task()
 {
   while (true) {
-    plotter.plot(remote_controller.ch_lh, motor3508_1.speed);
+    plotter.plot(motor3508_1.speed, motor3508_2.speed, motor3508_3.speed, motor3508_4.speed);
     osDelay(10);  // 100Hz
   }
 }

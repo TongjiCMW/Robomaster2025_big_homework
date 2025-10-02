@@ -44,7 +44,7 @@ extern "C" void control_task()
   motor3508_3_data.given_torque = 0.0f;
   motor3508_4_data.given_torque = 0.0f;
 
-  temp_speed = 9.42f;
+  temp_speed = 10.0f;
   while (true) {
     // 使用调试(f5)查看remote_controller内部变量的变化
     //这里执行遥控器控制任务
