@@ -8,11 +8,11 @@ sp::DBus remote_controller(&huart3);
 // 达妙
 // sp::DBus remote(&huart5, false);
 
-// CAN1总线实例化
-sp::CAN can1(&hcan1);
+// CAN2总线实例化
+sp::CAN can2(&hcan2);
 
 // 电机实例化
-sp::RM_Motor motor6020_1(1, sp::RM_Motors::GM6020_V);
+sp::RM_Motor motor6020_1(1, sp::RM_Motors::M3508, 14.9f);
 /*
 sp::RM_Motor motor3508_1(1, sp::RM_Motors::RM3508, 14.9f);
 
@@ -26,8 +26,8 @@ extern "C" void control_task()
   remote_controller.request();  //这里开始的时候要初始化,等待接收第一帧
 
   //can初始化配置
-  can1.config();
-  can1.start();
+  can2.config();
+  can2.start();
   //遥控器右边拨杆上中下挡控制输入给电机的电压值分别为5.5V, 2.0V, 0V
   //现在我上面的motor_type选择的是GM6020_V,所以cmd函数的输入单位是V
   while (true) {
@@ -35,10 +35,10 @@ extern "C" void control_task()
     //这里执行遥控器控制任务
     switch (remote_controller.sw_r) {
       case sp::DBusSwitchMode::UP:
-        motor6020_1.cmd(5.5f);
+        motor6020_1.cmd(0.2f);
         break;
       case sp::DBusSwitchMode::MID:
-        motor6020_1.cmd(2.0f);
+        motor6020_1.cmd(0.15f);
         break;
         //约定右down挡时全部电机失能
       case sp::DBusSwitchMode::DOWN:
@@ -47,8 +47,8 @@ extern "C" void control_task()
       default:
         break;
     }
-    motor6020_1.write(can1.tx_data);
-    can1.send(motor6020_1.tx_id);
+    motor6020_1.write(can2.tx_data);
+    can2.send(motor6020_1.tx_id);
     osDelay(10);
   }
 }
@@ -76,10 +76,10 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan)
   auto stamp_ms = osKernelSysTick();
 
   while (HAL_CAN_GetRxFifoFillLevel(hcan, CAN_RX_FIFO0) > 0) {
-    if (hcan == &hcan1) {
-      can1.recv();
+    if (hcan == &hcan2) {
+      can2.recv();
 
-      if (can1.rx_id == motor6020_1.rx_id) motor6020_1.read(can1.rx_data, stamp_ms);
+      if (can2.rx_id == motor6020_1.rx_id) motor6020_1.read(can2.rx_data, stamp_ms);
     }
   }
 }
