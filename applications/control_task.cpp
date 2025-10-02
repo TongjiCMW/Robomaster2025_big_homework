@@ -1,4 +1,3 @@
-
 #include "cmsis_os.h"
 #include "io/can/can.hpp"
 #include "io/dbus/dbus.hpp"
@@ -13,7 +12,7 @@ extern sp::RM_Motor motor3508_1;
 
 //初始化电机pid控制器以及电机运动数据
 //                             dt     kp    ki    kd    mo   mio   alpha  ang? dynamic?
-sp::PID motor3508_1_pid_speed(0.001f, 0.6f, 0.0f, 0.0f, 0.25f, 0.0f, 1.0f, false, true);
+sp::PID motor3508_1_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 1.5f, 0.0f, 1.0f, false, true);
 MovingData motor3508_1_data;
 
 extern "C" void control_task()
@@ -28,7 +27,7 @@ extern "C" void control_task()
 
   //电机运动数据初始化
 
-  motor3508_1_data.absolute_speed_set = 6.28f;
+  motor3508_1_data.absolute_speed_set = 12.56f;
   motor3508_1_data.given_torque = 0.0f;
   motor3508_1_data.given_voltage = 0.0f;
 

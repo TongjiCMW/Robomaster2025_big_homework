@@ -16,6 +16,9 @@ sp::CAN can2(&hcan2);
 
 // 电机实例化
 sp::RM_Motor motor3508_1(1, sp::RM_Motors::M3508, 14.9f);
+sp::RM_Motor motor3508_2(2, sp::RM_Motors::M3508, 14.9f);
+sp::RM_Motor motor3508_3(3, sp::RM_Motors::M3508, 14.9f);
+sp::RM_Motor motor3508_4(4, sp::RM_Motors::M3508, 14.9f);
 /*
 sp::RM_Motor motor3508_1(1, sp::RM_Motors::RM3508, 14.9f);
 a. 麦轮底盘数据：⻨轮直径154mm，⻨轮横向间距370mm，纵向间距330mm。
@@ -49,6 +52,9 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan)
       can2.recv();
 
       if (can2.rx_id == motor3508_1.rx_id) motor3508_1.read(can2.rx_data, stamp_ms);
+      if (can2.rx_id == motor3508_2.rx_id) motor3508_2.read(can2.rx_data, stamp_ms);
+      if (can2.rx_id == motor3508_3.rx_id) motor3508_3.read(can2.rx_data, stamp_ms);
+      if (can2.rx_id == motor3508_4.rx_id) motor3508_4.read(can2.rx_data, stamp_ms);
     }
   }
 }
