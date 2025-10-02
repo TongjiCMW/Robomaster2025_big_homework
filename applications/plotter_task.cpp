@@ -5,6 +5,7 @@
 #include "motor/rm_motor/rm_motor.hpp"
 
 extern sp::DBus remote_controller;
+
 sp::Plotter plotter(&huart1);
 
 extern "C" void plotter_task()

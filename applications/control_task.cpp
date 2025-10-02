@@ -3,16 +3,16 @@
 #include "io/dbus/dbus.hpp"
 #include "motor/rm_motor/rm_motor.hpp"
 // C板
-sp::DBus remote_controller(&huart3);
+extern sp::DBus remote_controller;
 //这个是遥控器的实例化,名字是remote_controller
 // 达妙
 // sp::DBus remote(&huart5, false);
 
 // CAN1总线实例化
-sp::CAN can1(&hcan1);
+extern sp::CAN can1;
 
 // 电机实例化
-sp::RM_Motor motor6020_1(1, sp::RM_Motors::GM6020_V);
+extern sp::RM_Motor motor6020_1;
 /*
 sp::RM_Motor motor3508_1(1, sp::RM_Motors::RM3508, 14.9f);
 
@@ -38,7 +38,7 @@ extern "C" void control_task()
         motor6020_1.cmd(5.5f);
         break;
       case sp::DBusSwitchMode::MID:
-        motor6020_1.cmd(2.0f);
+        motor6020_1.cmd(2.1f);
         break;
         //约定右down挡时全部电机失能
       case sp::DBusSwitchMode::DOWN:
@@ -50,36 +50,5 @@ extern "C" void control_task()
     motor6020_1.write(can1.tx_data);
     can1.send(motor6020_1.tx_id);
     osDelay(10);
-  }
-}
-
-extern "C" void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef * huart, uint16_t Size)
-{
-  auto stamp_ms = osKernelSysTick();
-
-  if (huart == &huart3) {
-    remote_controller.update(Size, stamp_ms);
-    remote_controller.request();
-  }  //这个是遥控器发送数据,c板接收  先解析上一帧再准备接收下一帧
-}
-
-extern "C" void HAL_UART_ErrorCallback(UART_HandleTypeDef * huart)
-{
-  if (huart == &huart3) {
-    remote_controller.request();
-  }
-}
-
-//CAN接收中断回调函数 读取电机数据
-extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan)
-{
-  auto stamp_ms = osKernelSysTick();
-
-  while (HAL_CAN_GetRxFifoFillLevel(hcan, CAN_RX_FIFO0) > 0) {
-    if (hcan == &hcan1) {
-      can1.recv();
-
-      if (can1.rx_id == motor6020_1.rx_id) motor6020_1.read(can1.rx_data, stamp_ms);
-    }
   }
 }
