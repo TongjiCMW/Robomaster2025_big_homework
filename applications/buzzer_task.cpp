@@ -92,6 +92,7 @@ void error_sound_imperial_march()
   play_note(392, 1000);  // G4 - 结束长音
 }
 
+//报错音调3 - 《Lemon》副歌开头
 void error_sound_lemon_intro_sound(void)
 {
   // 《Lemon》副歌开头 - 高两个八度版本
@@ -119,8 +120,10 @@ void error_sound_lemon_intro_sound(void)
   play_note(1568, 172);  // 5^ - G
   play_note(1318, 172);  // 3^ - E
   play_note(1318, 259);  // . - 延长
-  play_note(0, 259);     // . - 延长
-  play_note(1175, 172);  // 2^ - D
+  play_note(1318, 259);  // . - 延长
+
+  /*
+play_note(1175, 172);  // 2^ - D
 
   play_note(1318, 172);  // 3^ - E
   play_note(1397, 172);  // 4^ - F
@@ -185,6 +188,7 @@ void error_sound_lemon_intro_sound(void)
   play_note(0, 259);     // . - 延长
   play_note(0, 259);     // . - 延长
   play_note(0, 259);     // . - 延长
+*/
 }
 
 extern "C" void buzzer_task()
