@@ -15,6 +15,7 @@ extern sp::RM_Motor motor3508_1;
 extern sp::RM_Motor motor3508_2;
 extern sp::RM_Motor motor3508_3;
 extern sp::RM_Motor motor3508_4;
+
 //初始化电机pid控制器以及电机运动数据
 float dt_inuse = 0.01f;
 float kp_inuse = 0.8f;
@@ -43,6 +44,12 @@ sp::PID motor3508_4_pid_speed(
 MovingData motor3508_4_data;
 float temp_speed;
 float max_rotate_speed = 6.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应转速为6PI rad/s
+
+// 电机目标扭矩值 - 用于功率预测
+float motor3508_1_cmd_torque = 0.0f;
+float motor3508_2_cmd_torque = 0.0f;
+float motor3508_3_cmd_torque = 0.0f;
+float motor3508_4_cmd_torque = 0.0f;
 
 // 静止检测相关变量
 uint32_t static_start_time = 0;
@@ -130,18 +137,22 @@ extern "C" void control_task()
 
         motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
         motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
+        motor3508_1_cmd_torque = motor3508_1_data.given_torque;  // 保存目标扭矩用于功率预测
         motor3508_1.cmd(motor3508_1_data.given_torque);
 
         motor3508_2_pid_speed.calc(motor3508_2_data.absolute_speed_set, motor3508_2.speed);
         motor3508_2_data.given_torque = motor3508_2_pid_speed.out;
+        motor3508_2_cmd_torque = motor3508_2_data.given_torque;  // 保存目标扭矩用于功率预测
         motor3508_2.cmd(motor3508_2_data.given_torque);
 
         motor3508_3_pid_speed.calc(motor3508_3_data.absolute_speed_set, motor3508_3.speed);
         motor3508_3_data.given_torque = motor3508_3_pid_speed.out;
+        motor3508_3_cmd_torque = motor3508_3_data.given_torque;  // 保存目标扭矩用于功率预测
         motor3508_3.cmd(motor3508_3_data.given_torque);
 
         motor3508_4_pid_speed.calc(motor3508_4_data.absolute_speed_set, motor3508_4.speed);
         motor3508_4_data.given_torque = motor3508_4_pid_speed.out;
+        motor3508_4_cmd_torque = motor3508_4_data.given_torque;  // 保存目标扭矩用于功率预测
         motor3508_4.cmd(motor3508_4_data.given_torque);
         break;
 
