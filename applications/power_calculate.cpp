@@ -1,18 +1,23 @@
+#include <cmath>
+
 #include "cmsis_os.h"
+#include "io/dbus/dbus.hpp"
 #include "motor/rm_motor/rm_motor.hpp"
 #include "motor/super_cap/super_cap.hpp"
-
+#include "referee/pm02/pm02.hpp"
 extern sp::SuperCap supercap;
+extern sp::PM02 pm02;
+extern sp::DBus remote_controller;
 extern sp::RM_Motor motor3508_1;
 extern sp::RM_Motor motor3508_2;
 extern sp::RM_Motor motor3508_3;
 extern sp::RM_Motor motor3508_4;
 
 // 功率预测系数 - 需要自己整定
-float K1 = 2.5f;    // 扭矩平方项系数
+float K1 = 2.8f;    // 扭矩平方项系数
 float K2 = 0.009f;  // 转速平方项系数
-float K3 = 3.90f;    // 常数项
-
+float K3 = 3.90f;   // 常数项
+float K;            // 线性缩放扭矩系数
 // 需要从control_task传入的目标扭矩值
 extern float motor3508_1_cmd_torque;
 extern float motor3508_2_cmd_torque;
@@ -22,8 +27,12 @@ extern float motor3508_4_cmd_torque;
 // 全局变量 - 供外部访问的功率预测值
 float power_prediction = 0.0f;
 
+const float SAFETY_MARGIN = 4.0f;  // 安全余量
+
+const float CAPACITOR_ON_POWER =
+  20.0f;  // 电容策略,这里的意思是开启电容模式时，允许的功率阈值为裁判系统给出的功率加上此功率值
 // 滑动滤波相关变量
-static float speed_buffer[4][5] = {{0}};  // 4个电机，每个电机5个历史数据
+static float speed_buffer[4][3] = {{0}};  // 4个电机，每个电机5个历史数据
 static int buffer_index = 0;
 static bool buffer_full = false;
 
@@ -70,7 +79,21 @@ float predict_power()
 
   // 计算预测功率
   float predicted_power = K3 + sum_torque_speed + K1 * sum_torque_square + K2 * sum_speed_square;
-
+  float power_max = pm02.robot_status.chassis_power_limit;  //从裁判系统得到的底盘功率限制
+  if (remote_controller.sw_r == sp::DBusSwitchMode::UP) {
+    power_max += CAPACITOR_ON_POWER;  // 电容模式下允许更高的功率
+  }
+  if (predicted_power > power_max - SAFETY_MARGIN) {
+    K = 0.92 *
+        (-sum_torque_speed +
+         sqrt(
+           (sum_torque_speed * sum_torque_speed) -
+           4 * K1 * sum_torque_square * (K2 * sum_speed_square + K3 - power_max))) /
+        (2 * K1 * sum_torque_square);
+  }
+  else {
+    K = 1.0f;  // 不需要缩放
+  }
   return predicted_power;
 }
 

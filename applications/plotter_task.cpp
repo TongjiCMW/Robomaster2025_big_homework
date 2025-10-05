@@ -17,6 +17,7 @@ extern MovingData motor3508_3_data;
 extern MovingData motor3508_4_data;
 extern sp::PM02 pm02;
 extern sp::SuperCap supercap;
+
 sp::Plotter plotter(&huart1);
 
 extern float power_prediction;  //这个是一个全局变量,表示功率的预测值
@@ -25,7 +26,9 @@ extern "C" void plotter_task()
 {
   while (true) {
     //plotter.plot(motor3508_1.speed, motor3508_2.speed, motor3508_3.speed, motor3508_4.speed);
-    plotter.plot(supercap.power_in - supercap.power_out, power_prediction);
+    plotter.plot(
+      supercap.power_in - supercap.power_out, power_prediction,
+      pm02.robot_status.chassis_power_limit);
     //plotter.plot(motor3508_1.speed, motor3508_1_data.absolute_speed_set);
     //plotter.plot(remote_controller.ch_lh, remote_controller.ch_lv);
     osDelay(10);  // 100Hz
