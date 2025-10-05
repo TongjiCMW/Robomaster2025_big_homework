@@ -13,21 +13,31 @@ extern sp::RM_Motor motor3508_2;
 extern sp::RM_Motor motor3508_3;
 extern sp::RM_Motor motor3508_4;
 //初始化电机pid控制器以及电机运动数据
-//float dt = 0.01f;
+float dt_inuse = 0.01f;
+float kp_inuse = 0.8f;
+float ki_inuse = 0.5f;
+float kd_inuse = 0.005f;
+float mo_inuse = 2.5f;
+float mio_inuse = 1.0f;
+float alpha_inuse = 0.01f;
+bool ang = false;
+bool dynamic = true;
+//                             dt        kp        ki        kd        mo        mio       alpha     ang?  dynamic?
+sp::PID motor3508_1_pid_speed(
+  dt_inuse, kp_inuse, ki_inuse, kd_inuse, mo_inuse, mio_inuse, alpha_inuse, ang, dynamic);
+MovingData motor3508_1_data;
 
-//                             dt     kp    ki    kd    mo   mio   alpha  ang? dynamic?
-sp::PID motor3508_1_pid_speed(0.01f, 0.8f, 0.0f, 0.005f, 2.5f, 0.0f, 0.01f, false, true);
-MovingData motor3508_1_data;  //(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
-
-sp::PID motor3508_2_pid_speed(0.01f, 0.8f, 0.0f, 0.005f, 2.5f, 0.0f, 0.01f, false, true);
+sp::PID motor3508_2_pid_speed(
+  dt_inuse, kp_inuse, ki_inuse, kd_inuse, mo_inuse, mio_inuse, alpha_inuse, ang, dynamic);
 MovingData motor3508_2_data;
 
-sp::PID motor3508_3_pid_speed(0.01f, 0.8f, 0.0f, 0.005f, 2.5f, 0.0f, 0.01f, false, true);
+sp::PID motor3508_3_pid_speed(
+  dt_inuse, kp_inuse, ki_inuse, kd_inuse, mo_inuse, mio_inuse, alpha_inuse, ang, dynamic);
 MovingData motor3508_3_data;
 
-sp::PID motor3508_4_pid_speed(0.01f, 0.8f, 0.0f, 0.005f, 2.5f, 0.0f, 0.01f, false, true);
+sp::PID motor3508_4_pid_speed(
+  dt_inuse, kp_inuse, ki_inuse, kd_inuse, mo_inuse, mio_inuse, alpha_inuse, ang, dynamic);
 MovingData motor3508_4_data;
-
 float temp_speed;
 float max_rotate_speed = 6.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应转速为6PI rad/s
 
@@ -146,17 +156,6 @@ extern "C" void control_task()
       default:
         break;
     }
-    /*下面是死区功能用于解决由于静止噪声带来的抖动,但是不是很好用,因为它没法急刹车
-if (
-      remote_controller.ch_lv <= 0.01f && remote_controller.ch_lv >= -0.01f &&
-      remote_controller.ch_lh <= 0.01f && remote_controller.ch_lh >= -0.01f &&
-      remote_controller.ch_rh <= 0.01f && remote_controller.ch_rh >= -0.01f) {
-      motor3508_1.cmd(0.0f);
-      motor3508_2.cmd(0.0f);
-      motor3508_3.cmd(0.0f);
-      motor3508_4.cmd(0.0f);
-    }
-*/
 
     // 调用静止检测函数
     check_static_and_stop_motors();
