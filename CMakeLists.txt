@@ -52,16 +52,18 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     applications/plotter_task.cpp
     applications/servo_task.cpp
     applications/connectivity.cpp
-    
+    applications/power_calculate.cpp
+
+    sp_middleware/referee/pm02/pm02.cpp 
+    sp_middleware/tools/crc/crc.cpp 
+    sp_middleware/motor/super_cap/super_cap.cpp
     sp_middleware/io/dbus/dbus.cpp
     sp_middleware/io/buzzer/buzzer.cpp
     sp_middleware/io/led/led.cpp
     sp_middleware/io/servo/servo.cpp
     sp_middleware/io/can/can.cpp
-
     sp_middleware/motor/rm_motor/rm_motor.cpp
     sp_middleware/io/plotter/plotter.cpp
-
     sp_middleware/tools/math_tools/math_tools.cpp
     sp_middleware/tools/pid/pid.cpp
     

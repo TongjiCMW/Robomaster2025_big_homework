@@ -3,9 +3,12 @@
 #include "io/dbus/dbus.hpp"
 #include "motor.hpp"
 #include "motor/rm_motor/rm_motor.hpp"
+#include "motor/super_cap/super_cap.hpp"
+#include "referee/pm02/pm02.hpp"
 #include "tools/pid/pid.hpp"
 extern sp::DBus remote_controller;
-
+extern sp::PM02 pm02;
+extern sp::SuperCap supercap;
 extern sp::CAN can2;
 
 extern sp::RM_Motor motor3508_1;
@@ -80,6 +83,7 @@ void check_static_and_stop_motors()
 extern "C" void control_task()
 {
   remote_controller.request();  //这里开始的时候要初始化,等待接收第一帧
+  pm02.request();               // 初始化功率限制系统
 
   //can初始化配置
   can2.config();
@@ -98,7 +102,7 @@ extern "C" void control_task()
     // 使用调试(f5)查看remote_controller内部变量的变化
     //这里执行遥控器控制任务
 
-    //首先我们解算遥控器的输入对应的麦轮线速度
+    //首先我们解算遥控器的输入对应的麦轮旋转速度单位rad/s
     //假设遥控器输入拉满的时候,对应转速为6PI rad/s
     //其中麦轮的半径r = 0.077m
 
@@ -166,6 +170,16 @@ extern "C" void control_task()
     motor3508_4.write(can2.tx_data);
 
     can2.send(motor3508_1.tx_id);  //这里1-4电机直接用0x200的id发送
+
+    //下面是通过pm02这个功率限制系统得到的数据,对他进行功率限制
+    supercap.write(
+      can2.tx_data,
+      pm02.robot_status.chassis_power_limit,             // 底盘功率限制
+      pm02.power_heat.buffer_energy,                     // 缓冲能量
+      pm02.robot_status.power_management_chassis_output  // 底盘输出使能
+    );
+    can2.send(supercap.tx_id);
+
     osDelay(10);
   }
 }
