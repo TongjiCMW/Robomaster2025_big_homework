@@ -13,21 +13,59 @@ extern sp::RM_Motor motor3508_2;
 extern sp::RM_Motor motor3508_3;
 extern sp::RM_Motor motor3508_4;
 //初始化电机pid控制器以及电机运动数据
-//                             dt     kp    ki    kd    mo   mio   alpha  ang? dynamic?
-sp::PID motor3508_1_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
-MovingData motor3508_1_data;
+//float dt = 0.01f;
 
-sp::PID motor3508_2_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
+//                             dt     kp    ki    kd    mo   mio   alpha  ang? dynamic?
+sp::PID motor3508_1_pid_speed(0.01f, 0.8f, 0.0f, 0.005f, 2.5f, 0.0f, 0.01f, false, true);
+MovingData motor3508_1_data;  //(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
+
+sp::PID motor3508_2_pid_speed(0.01f, 0.8f, 0.0f, 0.005f, 2.5f, 0.0f, 0.01f, false, true);
 MovingData motor3508_2_data;
 
-sp::PID motor3508_3_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
+sp::PID motor3508_3_pid_speed(0.01f, 0.8f, 0.0f, 0.005f, 2.5f, 0.0f, 0.01f, false, true);
 MovingData motor3508_3_data;
 
-sp::PID motor3508_4_pid_speed(0.01f, 0.8f, 0.0f, 0.0f, 2.5f, 0.0f, 1.0f, false, true);
+sp::PID motor3508_4_pid_speed(0.01f, 0.8f, 0.0f, 0.005f, 2.5f, 0.0f, 0.01f, false, true);
 MovingData motor3508_4_data;
 
 float temp_speed;
-float max_rotate_speed = 5.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应转速为6PI rad/s
+float max_rotate_speed = 6.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应转速为6PI rad/s
+
+// 静止检测相关变量
+uint32_t static_start_time = 0;
+const uint32_t STATIC_THRESHOLD_MS = 200;  // 长达0.2秒收到静止命令
+bool want_static = false;
+const float DEAD_ZONE = 0.01f;
+// 静止检测函数
+void check_static_and_stop_motors()
+{
+  uint32_t current_time = osKernelSysTick();
+  if (
+    remote_controller.ch_lv <= DEAD_ZONE && remote_controller.ch_lv >= -DEAD_ZONE &&
+    remote_controller.ch_lh <= DEAD_ZONE && remote_controller.ch_lh >= -DEAD_ZONE &&
+    remote_controller.ch_rh <= DEAD_ZONE && remote_controller.ch_rh >= -DEAD_ZONE) {
+    want_static = true;
+  }
+  else {
+    want_static = false;
+  }
+  if (want_static) {
+    if (static_start_time == 0) {
+      static_start_time = current_time;  // 开始计时
+    }
+    else if (current_time - static_start_time >= STATIC_THRESHOLD_MS) {
+      // 执行静止命令
+      motor3508_1.cmd(0.0f);
+      motor3508_2.cmd(0.0f);
+      motor3508_3.cmd(0.0f);
+      motor3508_4.cmd(0.0f);
+    }
+  }
+  else {
+    // 收到正常指令，重置状态
+    static_start_time = 0;
+  }
+}
 
 extern "C" void control_task()
 {
@@ -36,8 +74,6 @@ extern "C" void control_task()
   //can初始化配置
   can2.config();
   can2.start();
-  //遥控器右边拨杆上中下挡控制输入给电机的电压值分别为5.5V, 2.0V, 0V
-  //现在我上面的motor_type选择的是GM3508_V,所以cmd函数的输入单位是V
 
   //电机运动数据初始化
 
@@ -110,7 +146,7 @@ extern "C" void control_task()
       default:
         break;
     }
-    /*下面是死区功能,但是不是很好用,因为它没法急刹车
+    /*下面是死区功能用于解决由于静止噪声带来的抖动,但是不是很好用,因为它没法急刹车
 if (
       remote_controller.ch_lv <= 0.01f && remote_controller.ch_lv >= -0.01f &&
       remote_controller.ch_lh <= 0.01f && remote_controller.ch_lh >= -0.01f &&
@@ -121,6 +157,9 @@ if (
       motor3508_4.cmd(0.0f);
     }
 */
+
+    // 调用静止检测函数
+    check_static_and_stop_motors();
 
     motor3508_1.write(can2.tx_data);
     motor3508_2.write(can2.tx_data);
