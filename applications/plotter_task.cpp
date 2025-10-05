@@ -25,8 +25,8 @@ extern "C" void plotter_task()
 {
   while (true) {
     //plotter.plot(motor3508_1.speed, motor3508_2.speed, motor3508_3.speed, motor3508_4.speed);
-    //plotter.plot(supercap.power_in, power_prediction);
-    plotter.plot(motor3508_1.speed);
+    plotter.plot(supercap.power_in - supercap.power_out, power_prediction);
+    //plotter.plot(motor3508_1.speed, motor3508_1_data.absolute_speed_set);
     //plotter.plot(remote_controller.ch_lh, remote_controller.ch_lv);
     osDelay(10);  // 100Hz
   }

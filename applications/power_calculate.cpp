@@ -9,8 +9,8 @@ extern sp::RM_Motor motor3508_3;
 extern sp::RM_Motor motor3508_4;
 
 // 功率预测系数 - 需要自己整定
-float K1 = 0.2f;    // 扭矩平方项系数
-float K2 = 0.01f;  // 转速平方项系数
+float K1 = 2.0f;    // 扭矩平方项系数
+float K2 = 0.1f;  // 转速平方项系数
 float K3 = 5.80f;    // 常数项
 
 // 需要从control_task传入的目标扭矩值

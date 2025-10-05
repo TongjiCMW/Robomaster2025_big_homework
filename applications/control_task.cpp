@@ -18,11 +18,11 @@ extern sp::RM_Motor motor3508_4;
 
 //初始化电机pid控制器以及电机运动数据
 float dt_inuse = 0.01f;
-float kp_inuse = 0.8f;
-float ki_inuse = 0.5f;
-float kd_inuse = 0.005f;
+float kp_inuse = 0.20f;
+float ki_inuse =  0.7f;
+float kd_inuse = 0.0f;
 float mo_inuse = 2.5f;
-float mio_inuse = 1.0f;
+float mio_inuse = 1.5f;
 float alpha_inuse = 0.01f;
 bool ang = false;
 bool dynamic = true;
@@ -173,7 +173,7 @@ extern "C" void control_task()
     }
 
     // 调用静止检测函数
-    check_static_and_stop_motors();
+    //check_static_and_stop_motors();
 
     motor3508_1.write(can2.tx_data);
     motor3508_2.write(can2.tx_data);
