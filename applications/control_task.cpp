@@ -110,8 +110,8 @@ extern "C" void control_task()
       default:
         break;
     }
-
-    if (
+    /*下面是死区功能,但是不是很好用,因为它没法急刹车
+if (
       remote_controller.ch_lv <= 0.01f && remote_controller.ch_lv >= -0.01f &&
       remote_controller.ch_lh <= 0.01f && remote_controller.ch_lh >= -0.01f &&
       remote_controller.ch_rh <= 0.01f && remote_controller.ch_rh >= -0.01f) {
@@ -120,6 +120,7 @@ extern "C" void control_task()
       motor3508_3.cmd(0.0f);
       motor3508_4.cmd(0.0f);
     }
+*/
 
     motor3508_1.write(can2.tx_data);
     motor3508_2.write(can2.tx_data);
