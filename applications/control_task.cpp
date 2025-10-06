@@ -29,7 +29,7 @@ float alpha_inuse = 0.01f;
 bool ang = false;
 bool dynamic = true;
 extern PowerControl chassis_power_control;
-//                             dt        kp        ki        kd        mo        mio       alpha     ang?  dynamic?
+//  dt        kp        ki        kd        mo        mio       alpha     ang?  dynamic?
 sp::PID motor3508_1_pid_speed(
   dt_inuse, kp_inuse, ki_inuse, kd_inuse, mo_inuse, mio_inuse, alpha_inuse, ang, dynamic);
 MovingData motor3508_1_data;
@@ -46,52 +46,55 @@ sp::PID motor3508_4_pid_speed(
   dt_inuse, kp_inuse, ki_inuse, kd_inuse, mo_inuse, mio_inuse, alpha_inuse, ang, dynamic);
 MovingData motor3508_4_data;
 
-float max_moving_speed = 6.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应转速为6PI rad/s
+float max_moving_speed = 6.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应轮子转速为6PI rad/s
 float const_rotate_speed = 9.091f;  //假设遥控器右摇杆输入旋转的时候,对应轮子转速为 9.0909rad/s
 //这个转速刚好对应步兵绕整体以2rad/s旋转
 float rotate_flag = 0.0f;
 float max_rotate_speed = 8.0 * 3.14159f;  //最大旋转速度,这个是解锁了电容模式之后
-// 电机目标扭矩值 - 用于功率预测
+
+// 全局变量 电机目标扭矩值 - 将用于功率预测
 float motor3508_1_cmd_torque = 0.0f;
 float motor3508_2_cmd_torque = 0.0f;
 float motor3508_3_cmd_torque = 0.0f;
 float motor3508_4_cmd_torque = 0.0f;
 
-// 静止检测相关变量
-uint32_t static_start_time = 0;
-const uint32_t STATIC_THRESHOLD_MS = 200;  // 长达0.2秒收到静止命令
-bool want_static = false;
-const float DEAD_ZONE = 0.01f;
-// 静止检测函数
-void check_static_and_stop_motors()
-{
-  uint32_t current_time = osKernelSysTick();
-  if (
-    remote_controller.ch_lv <= DEAD_ZONE && remote_controller.ch_lv >= -DEAD_ZONE &&
-    remote_controller.ch_lh <= DEAD_ZONE && remote_controller.ch_lh >= -DEAD_ZONE &&
-    remote_controller.ch_rh <= DEAD_ZONE && remote_controller.ch_rh >= -DEAD_ZONE) {
-    want_static = true;
-  }
-  else {
-    want_static = false;
-  }
-  if (want_static) {
-    if (static_start_time == 0) {
-      static_start_time = current_time;  // 开始计时
-    }
-    else if (current_time - static_start_time >= STATIC_THRESHOLD_MS) {
-      // 执行静止命令
-      motor3508_1.cmd(0.0f);
-      motor3508_2.cmd(0.0f);
-      motor3508_3.cmd(0.0f);
-      motor3508_4.cmd(0.0f);
-    }
-  }
-  else {
-    // 收到正常指令，重置状态
-    static_start_time = 0;
-  }
-}
+//下面这个函数是用来消抖的,但是可以通过pid调整解决所以删除掉了
+
+// // 静止检测相关变量
+// uint32_t static_start_time = 0;
+// const uint32_t STATIC_THRESHOLD_MS = 200;  // 长达0.2秒收到静止命令
+// bool want_static = false;
+// const float DEAD_ZONE = 0.01f;
+// // 静止检测函数
+// void check_static_and_stop_motors()
+// {
+//   uint32_t current_time = osKernelSysTick();
+//   if (
+//     remote_controller.ch_lv <= DEAD_ZONE && remote_controller.ch_lv >= -DEAD_ZONE &&
+//     remote_controller.ch_lh <= DEAD_ZONE && remote_controller.ch_lh >= -DEAD_ZONE &&
+//     remote_controller.ch_rh <= DEAD_ZONE && remote_controller.ch_rh >= -DEAD_ZONE) {
+//     want_static = true;
+//   }
+//   else {
+//     want_static = false;
+//   }
+//   if (want_static) {
+//     if (static_start_time == 0) {
+//       static_start_time = current_time;  // 开始计时
+//     }
+//     else if (current_time - static_start_time >= STATIC_THRESHOLD_MS) {
+//       // 执行静止命令
+//       motor3508_1.cmd(0.0f);
+//       motor3508_2.cmd(0.0f);
+//       motor3508_3.cmd(0.0f);
+//       motor3508_4.cmd(0.0f);
+//     }
+//   }
+//   else {
+//     // 收到正常指令，重置状态
+//     static_start_time = 0;
+//   }
+// }
 
 extern "C" void control_task()
 {
@@ -115,7 +118,7 @@ extern "C" void control_task()
         //这里之后会写成电容使用策略
         //                              前后
         //                             左右
-        //  旋转
+        //                              旋转
         motor3508_1_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
                                               max_moving_speed * -remote_controller.ch_lh +
                                               max_rotate_speed * remote_controller.ch_rh;

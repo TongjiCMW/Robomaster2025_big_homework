@@ -15,7 +15,7 @@ extern sp::RM_Motor motor3508_2;
 extern sp::RM_Motor motor3508_3;
 extern sp::RM_Motor motor3508_4;
 
-// 需要从control_task传入的目标扭矩值
+// 需要从control_task传入的目标扭矩值  全局变量
 extern float motor3508_1_cmd_torque;
 extern float motor3508_2_cmd_torque;
 extern float motor3508_3_cmd_torque;
@@ -24,12 +24,12 @@ extern float motor3508_4_cmd_torque;
 // 实例化功率控制结构体 - 供外部访问
 PowerControl chassis_power_control;
 
-// 滑动滤波相关变量
-static float speed_buffer[4][3] = {{0}};  // 4个电机，每个电机5个历史数据
+// 滑动滤波相关变量,
+static float speed_buffer[4][3] = {{0}};  // 4个电机，每个电机3个历史数据
 static int buffer_index = 0;
 static bool buffer_full = false;
 
-// 滑动滤波函数
+// 滑动滤波函数  这个函数用来消除电机转速反馈值的噪声
 float moving_average_filter(float new_value, int motor_index)
 {
   speed_buffer[motor_index][buffer_index] = new_value;

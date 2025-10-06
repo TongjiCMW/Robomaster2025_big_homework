@@ -5,13 +5,13 @@
 #include "io/dbus/dbus.hpp"
 #include "motor/rm_motor/rm_motor.hpp"
 #include "motor/super_cap/super_cap.hpp"
+
 // C板
 sp::Buzzer buzzer(&htim4, TIM_CHANNEL_3, 84e6);
-
 // 达妙
 // sp::Buzzer buzzer(&htim12, TIM_CHANNEL_2, 240e6);
 
-//下面是用来检测报错的,电机报错,通信报错等
+//下面是用来检测报错的,电机报错,通信报错,电容报错等
 extern sp::DBus remote_controller;
 extern sp::RM_Motor motor3508_1;
 extern sp::RM_Motor motor3508_2;
@@ -218,14 +218,13 @@ extern "C" void buzzer_task()
     if (!motor3508_2.is_alive(osKernelSysTick())) {
       power_on_beep();
       power_on_beep();
-      error_sound_imperial_march();
+      error_sound_mario_death();
     }
     if (!motor3508_3.is_alive(osKernelSysTick())) {
       power_on_beep();
       power_on_beep();
       power_on_beep();
-
-      error_sound_lemon_intro_sound();
+      error_sound_mario_death();
     }
     if (!motor3508_4.is_alive(osKernelSysTick())) {
       power_on_beep();
@@ -244,6 +243,6 @@ extern "C" void buzzer_task()
 
       error_sound_lemon_intro_sound();
     }
-    osDelay(1000);
+    osDelay(500);
   }
 }

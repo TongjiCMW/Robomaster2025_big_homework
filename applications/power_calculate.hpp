@@ -14,7 +14,8 @@ struct PowerControl
   // 功率控制参数
   float safety_margin = 4.0f;        // 安全余量
   float capacitor_on_power = 20.0f;  // 电容策略功率加成
-  float correction_factor = 0.92f;   // 修正系数
+  float correction_factor = 0.92f;
+  // 修正系数 这个参数是用来修正K的,如果在安全余量下还是会超功率,就把这个值调小一些
 
   // 功率预测值
   float power_prediction = 0.0f;

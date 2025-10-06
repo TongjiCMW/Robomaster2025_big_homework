@@ -18,10 +18,9 @@ extern MovingData motor3508_3_data;
 extern MovingData motor3508_4_data;
 extern sp::PM02 pm02;
 extern sp::SuperCap supercap;
+extern PowerControl chassis_power_control;
 
 sp::Plotter plotter(&huart1);
-
-extern PowerControl chassis_power_control;
 
 extern "C" void plotter_task()
 {

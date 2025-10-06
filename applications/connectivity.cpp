@@ -4,7 +4,8 @@
 #include "motor/rm_motor/rm_motor.hpp"
 #include "motor/super_cap/super_cap.hpp"
 #include "referee/pm02/pm02.hpp"
-//这个文件初始化了所有通信模块(包括通信模块连接的外设如电机)
+//这个文件初始化了所有通信模块,电容,电调,裁判系统
+//(包括通信模块连接的外设如电机)
 //其他文件调用对应class时候只需要extern就行
 
 // 裁判系统 (通过UART6通信)
