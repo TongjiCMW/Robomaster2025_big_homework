@@ -29,7 +29,7 @@ struct PowerControl
   float derivative_threshold = 700.0f;              // 功率急剧上升阈值 (W/s)
   float correction_factor_decrease_rate = 0.05f;    // 修正系数减少速率
   float correction_factor_min = 0.7f;               // 修正系数最小值
-  float correction_factor_recovery_rate = 0.0025f;  // 修正系数恢复速率
+  float correction_factor_recovery_rate = 0.002f;  // 修正系数恢复速率
 };
 
 extern PowerControl chassis_power_control;
