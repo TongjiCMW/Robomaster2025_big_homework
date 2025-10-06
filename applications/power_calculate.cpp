@@ -83,7 +83,8 @@ float predict_power()
   chassis_power_control.realtime_power_max = power_max;
 
   if (chassis_power_control.power_control_on_flag) {
-    float dt = 0.01f;  // 100Hz采样，时间间隔0.01秒
+    //微分器用于检测功率急剧上升
+    float dt = 0.01f;  // 100Hz采样，时间间隔0.01秒这个值要随freertos任务调度频率变化
     chassis_power_control.power_derivative =
       (supercap.power_in - supercap.power_out - chassis_power_control.last_predicted_power) / dt;
 
@@ -112,9 +113,7 @@ float predict_power()
                                   chassis_power_control.K3 - power_max))) /
         (2 * chassis_power_control.K1 * sum_torque_square);
     }
-    // else if (chassis_power_control.power_derivative > chassis_power_control.derivative_threshold) {
-    //   chassis_power_control.K = 0.05f;
-    // }
+
     else {
       chassis_power_control.K = 1.0f;  // 不需要缩放
     }

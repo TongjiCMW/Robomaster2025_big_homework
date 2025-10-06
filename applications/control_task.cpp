@@ -116,6 +116,10 @@ extern "C" void control_task()
     switch (remote_controller.sw_r) {
       case sp::DBusSwitchMode::UP:
         //这里之后会写成电容使用策略
+
+        //UP档的使用策略是提高功率上限20w
+        //同时允许更大的自转速度(最大自转速度可以使电池达到最高功率)
+
         //                              前后
         //                             左右
         //                              旋转
@@ -155,36 +159,26 @@ extern "C" void control_task()
         break;
 
       case sp::DBusSwitchMode::MID:
-        // rotate_flag = (remote_controller.ch_rh > 0.0f) - (remote_controller.ch_rh < 0.0f);
-        // //                              前后                            左右                          旋转
-        // motor3508_1_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
-        //                                       max_moving_speed * -remote_controller.ch_lh +
-        //                                       const_rotate_speed * rotate_flag;
 
-        // motor3508_2_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
-        //                                       max_moving_speed * -remote_controller.ch_lh +
-        //                                       const_rotate_speed * rotate_flag;
-
-        // motor3508_3_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
-        //                                       max_moving_speed * remote_controller.ch_lh +
-        //                                       const_rotate_speed * rotate_flag;
-
-        // motor3508_4_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
-        //                                       max_moving_speed * remote_controller.ch_lh +
-        //                                       const_rotate_speed * rotate_flag;
+        //MID档的使用策略是正常使用,自身旋转是2rad/s的恒定值
+        //功率限定在裁判系统给出的功率限制之内
+        rotate_flag = (remote_controller.ch_rh > 0.0f) - (remote_controller.ch_rh < 0.0f);
+        //                              前后                            左右                          旋转
         motor3508_1_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
                                               max_moving_speed * -remote_controller.ch_lh +
-                                              max_rotate_speed * remote_controller.ch_rh;
+                                              const_rotate_speed * rotate_flag;
+
         motor3508_2_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
                                               max_moving_speed * -remote_controller.ch_lh +
-                                              max_rotate_speed * remote_controller.ch_rh;
+                                              const_rotate_speed * rotate_flag;
 
         motor3508_3_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
                                               max_moving_speed * remote_controller.ch_lh +
-                                              max_rotate_speed * remote_controller.ch_rh;
+                                              const_rotate_speed * rotate_flag;
+
         motor3508_4_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
                                               max_moving_speed * remote_controller.ch_lh +
-                                              max_rotate_speed * remote_controller.ch_rh;
+                                              const_rotate_speed * rotate_flag;
 
         motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
         motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
