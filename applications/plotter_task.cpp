@@ -25,12 +25,13 @@ extern float power_prediction;  //这个是一个全局变量,表示功率的预
 extern "C" void plotter_task()
 {
   while (true) {
-    //plotter.plot(motor3508_1.speed, motor3508_2.speed, motor3508_3.speed, motor3508_4.speed);
-    plotter.plot(
-      supercap.power_in - supercap.power_out, power_prediction,
-      pm02.robot_status.chassis_power_limit);
+    //float rotate_flag = (remote_controller.ch_rh > 0.0f) - (remote_controller.ch_rh < 0.0f);
+
+    plotter.plot(supercap.power_in - supercap.power_out, power_prediction, pm02.robot_status.chassis_power_limit+20.0f);
+    //这个20是电容策略的一个值,表示允许的功率阈值比裁判系统给出的功率高20W
     //plotter.plot(motor3508_1.speed, motor3508_1_data.absolute_speed_set);
     //plotter.plot(remote_controller.ch_lh, remote_controller.ch_lv);
+
     osDelay(10);  // 100Hz
   }
 }

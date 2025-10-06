@@ -84,11 +84,11 @@ float predict_power()
     power_max += CAPACITOR_ON_POWER;  // 电容模式下允许更高的功率
   }
   if (predicted_power > power_max - SAFETY_MARGIN) {
-    K = 0.92 *
-        (-sum_torque_speed +
-         sqrt(
-           (sum_torque_speed * sum_torque_speed) -
-           4 * K1 * sum_torque_square * (K2 * sum_speed_square + K3 - power_max))) /
+    K = 0.94 *
+        (-sum_torque_speed + sqrt(
+                               (sum_torque_speed * sum_torque_speed) -
+                               4 * K1 * sum_torque_square *
+                                 (K2 * sum_speed_square + K3 - (power_max - SAFETY_MARGIN)))) /
         (2 * K1 * sum_torque_square);
   }
   else {
