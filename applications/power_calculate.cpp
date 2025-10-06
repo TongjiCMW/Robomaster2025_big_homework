@@ -1,3 +1,5 @@
+#include "power_calculate.hpp"
+
 #include <cmath>
 
 #include "cmsis_os.h"
@@ -13,24 +15,15 @@ extern sp::RM_Motor motor3508_2;
 extern sp::RM_Motor motor3508_3;
 extern sp::RM_Motor motor3508_4;
 
-// 功率预测系数 - 需要自己整定
-float K1 = 2.8f;    // 扭矩平方项系数
-float K2 = 0.009f;  // 转速平方项系数
-float K3 = 3.90f;   // 常数项
-float K;            // 线性缩放扭矩系数
 // 需要从control_task传入的目标扭矩值
 extern float motor3508_1_cmd_torque;
 extern float motor3508_2_cmd_torque;
 extern float motor3508_3_cmd_torque;
 extern float motor3508_4_cmd_torque;
 
-// 全局变量 - 供外部访问的功率预测值
-float power_prediction = 0.0f;
+// 实例化功率控制结构体 - 供外部访问
+PowerControl chassis_power_control;
 
-const float SAFETY_MARGIN = 4.0f;  // 安全余量
-
-const float CAPACITOR_ON_POWER =
-  20.0f;  // 电容策略,这里的意思是开启电容模式时，允许的功率阈值为裁判系统给出的功率加上此功率值
 // 滑动滤波相关变量
 static float speed_buffer[4][3] = {{0}};  // 4个电机，每个电机5个历史数据
 static int buffer_index = 0;
@@ -78,21 +71,28 @@ float predict_power()
     speed_1 * speed_1 + speed_2 * speed_2 + speed_3 * speed_3 + speed_4 * speed_4;
 
   // 计算预测功率
-  float predicted_power = K3 + sum_torque_speed + K1 * sum_torque_square + K2 * sum_speed_square;
-  float power_max = pm02.robot_status.chassis_power_limit;  //从裁判系统得到的底盘功率限制
+  float predicted_power = chassis_power_control.K3 + sum_torque_speed +
+                          chassis_power_control.K1 * sum_torque_square +
+                          chassis_power_control.K2 * sum_speed_square;
+  float power_max = pm02.robot_status.chassis_power_limit;
+  //从裁判系统得到的底盘功率限制
   if (remote_controller.sw_r == sp::DBusSwitchMode::UP) {
-    power_max += CAPACITOR_ON_POWER;  // 电容模式下允许更高的功率
+    power_max += chassis_power_control.capacitor_on_power;
+    // 电容模式下允许更高的功率
   }
-  if (predicted_power > power_max - SAFETY_MARGIN) {
-    K = 0.94 *
-        (-sum_torque_speed + sqrt(
-                               (sum_torque_speed * sum_torque_speed) -
-                               4 * K1 * sum_torque_square *
-                                 (K2 * sum_speed_square + K3 - (power_max - SAFETY_MARGIN)))) /
-        (2 * K1 * sum_torque_square);
+  if (predicted_power > power_max - chassis_power_control.safety_margin) {
+    chassis_power_control.K =
+      chassis_power_control.correction_factor *
+      (-sum_torque_speed +
+       sqrt(
+         (sum_torque_speed * sum_torque_speed) -
+         4 * chassis_power_control.K1 * sum_torque_square *
+           (chassis_power_control.K2 * sum_speed_square + chassis_power_control.K3 -
+            (power_max - chassis_power_control.safety_margin)))) /
+      (2 * chassis_power_control.K1 * sum_torque_square);
   }
   else {
-    K = 1.0f;  // 不需要缩放
+    chassis_power_control.K = 1.0f;  // 不需要缩放
   }
   return predicted_power;
 }
@@ -101,7 +101,7 @@ extern "C" void power_calculate_task()
 {
   while (true) {
     // 计算预测功率并更新全局变量
-    power_prediction = predict_power();
+    chassis_power_control.power_prediction = predict_power();
 
     // 更新滑动滤波的缓冲区索引
     buffer_index = (buffer_index + 1) % 3;

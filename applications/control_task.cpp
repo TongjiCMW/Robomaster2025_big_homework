@@ -4,6 +4,7 @@
 #include "motor.hpp"
 #include "motor/rm_motor/rm_motor.hpp"
 #include "motor/super_cap/super_cap.hpp"
+#include "power_calculate.hpp"
 #include "referee/pm02/pm02.hpp"
 #include "tools/pid/pid.hpp"
 extern sp::DBus remote_controller;
@@ -26,7 +27,7 @@ float mio_inuse = 1.5f;
 float alpha_inuse = 0.01f;
 bool ang = false;
 bool dynamic = true;
-extern float K;
+extern PowerControl chassis_power_control;
 //                             dt        kp        ki        kd        mo        mio       alpha     ang?  dynamic?
 sp::PID motor3508_1_pid_speed(
   dt_inuse, kp_inuse, ki_inuse, kd_inuse, mo_inuse, mio_inuse, alpha_inuse, ang, dynamic);
@@ -45,7 +46,7 @@ sp::PID motor3508_4_pid_speed(
 MovingData motor3508_4_data;
 
 float max_moving_speed = 6.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应转速为6PI rad/s
-float const_rotate_speed = 9.091f;         //假设遥控器右摇杆输入旋转的时候,对应轮子转速为 9.0909rad/s
+float const_rotate_speed = 9.091f;  //假设遥控器右摇杆输入旋转的时候,对应轮子转速为 9.0909rad/s
 //这个转速刚好对应步兵绕整体以2rad/s旋转
 float rotate_flag = 0.0f;
 float max_rotate_speed = 8.0 * 3.14159f;  //最大旋转速度,这个是解锁了电容模式之后
@@ -136,22 +137,22 @@ extern "C" void control_task()
         motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
         motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
         motor3508_1_cmd_torque = motor3508_1_data.given_torque;  // 保存目标扭矩用于功率预测
-        motor3508_1.cmd(motor3508_1_data.given_torque * K);
+        motor3508_1.cmd(motor3508_1_data.given_torque * chassis_power_control.K);
 
         motor3508_2_pid_speed.calc(motor3508_2_data.absolute_speed_set, motor3508_2.speed);
         motor3508_2_data.given_torque = motor3508_2_pid_speed.out;
         motor3508_2_cmd_torque = motor3508_2_data.given_torque;  // 保存目标扭矩用于功率预测
-        motor3508_2.cmd(motor3508_2_data.given_torque * K);
+        motor3508_2.cmd(motor3508_2_data.given_torque * chassis_power_control.K);
 
         motor3508_3_pid_speed.calc(motor3508_3_data.absolute_speed_set, motor3508_3.speed);
         motor3508_3_data.given_torque = motor3508_3_pid_speed.out;
         motor3508_3_cmd_torque = motor3508_3_data.given_torque;  // 保存目标扭矩用于功率预测
-        motor3508_3.cmd(motor3508_3_data.given_torque * K);
+        motor3508_3.cmd(motor3508_3_data.given_torque * chassis_power_control.K);
 
         motor3508_4_pid_speed.calc(motor3508_4_data.absolute_speed_set, motor3508_4.speed);
         motor3508_4_data.given_torque = motor3508_4_pid_speed.out;
         motor3508_4_cmd_torque = motor3508_4_data.given_torque;  // 保存目标扭矩用于功率预测
-        motor3508_4.cmd(motor3508_4_data.given_torque * K);
+        motor3508_4.cmd(motor3508_4_data.given_torque * chassis_power_control.K);
         break;
 
       case sp::DBusSwitchMode::MID:
@@ -176,22 +177,22 @@ extern "C" void control_task()
         motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
         motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
         motor3508_1_cmd_torque = motor3508_1_data.given_torque;  // 保存目标扭矩用于功率预测
-        motor3508_1.cmd(motor3508_1_data.given_torque * K);
+        motor3508_1.cmd(motor3508_1_data.given_torque * chassis_power_control.K);
 
         motor3508_2_pid_speed.calc(motor3508_2_data.absolute_speed_set, motor3508_2.speed);
         motor3508_2_data.given_torque = motor3508_2_pid_speed.out;
         motor3508_2_cmd_torque = motor3508_2_data.given_torque;  // 保存目标扭矩用于功率预测
-        motor3508_2.cmd(motor3508_2_data.given_torque * K);
+        motor3508_2.cmd(motor3508_2_data.given_torque * chassis_power_control.K);
 
         motor3508_3_pid_speed.calc(motor3508_3_data.absolute_speed_set, motor3508_3.speed);
         motor3508_3_data.given_torque = motor3508_3_pid_speed.out;
         motor3508_3_cmd_torque = motor3508_3_data.given_torque;  // 保存目标扭矩用于功率预测
-        motor3508_3.cmd(motor3508_3_data.given_torque * K);
+        motor3508_3.cmd(motor3508_3_data.given_torque * chassis_power_control.K);
 
         motor3508_4_pid_speed.calc(motor3508_4_data.absolute_speed_set, motor3508_4.speed);
         motor3508_4_data.given_torque = motor3508_4_pid_speed.out;
         motor3508_4_cmd_torque = motor3508_4_data.given_torque;  // 保存目标扭矩用于功率预测
-        motor3508_4.cmd(motor3508_4_data.given_torque * K);
+        motor3508_4.cmd(motor3508_4_data.given_torque * chassis_power_control.K);
         break;
 
         //约定右down挡时全部电机失能
