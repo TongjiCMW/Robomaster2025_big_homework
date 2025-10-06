@@ -32,7 +32,12 @@ extern "C" void plotter_task()
     //这个20是电容策略的一个值,表示允许的功率阈值比裁判系统给出的功率高20W
     //plotter.plot(motor3508_1.speed, motor3508_1_data.absolute_speed_set);
     //plotter.plot(remote_controller.ch_lh, remote_controller.ch_lv);
-
+    // if (motor3508_1.is_alive(osKernelSysTick())) {
+    //   plotter.plot(1.0f);
+    // }
+    // else {
+    //   plotter.plot(0.0f);
+    // }
     osDelay(10);  // 100Hz
   }
 }

@@ -7,6 +7,7 @@
 #include "power_calculate.hpp"
 #include "referee/pm02/pm02.hpp"
 #include "tools/pid/pid.hpp"
+
 extern sp::DBus remote_controller;
 extern sp::PM02 pm02;
 extern sp::SuperCap supercap;
@@ -109,29 +110,24 @@ extern "C" void control_task()
   motor3508_4_data.given_torque = 0.0f;
 
   while (true) {
-    // 使用调试(f5)查看remote_controller内部变量的变化
-    //这里执行遥控器控制任务
-
-    //首先我们解算遥控器的输入对应的麦轮旋转速度单位rad/s
-    //假设遥控器输入拉满的时候,对应转速为6PI rad/s
-    //其中麦轮的半径r = 0.077m
-
     switch (remote_controller.sw_r) {
       case sp::DBusSwitchMode::UP:
         //这里之后会写成电容使用策略
-        //                              前后                            左右                          旋转
+        //                              前后
+        //                             左右
+        //  旋转
         motor3508_1_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
-                                              max_moving_speed * remote_controller.ch_lh +
+                                              max_moving_speed * -remote_controller.ch_lh +
                                               max_rotate_speed * remote_controller.ch_rh;
         motor3508_2_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
-                                              max_moving_speed * remote_controller.ch_lh +
+                                              max_moving_speed * -remote_controller.ch_lh +
                                               max_rotate_speed * remote_controller.ch_rh;
 
         motor3508_3_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
-                                              max_moving_speed * -remote_controller.ch_lh +
+                                              max_moving_speed * remote_controller.ch_lh +
                                               max_rotate_speed * remote_controller.ch_rh;
         motor3508_4_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
-                                              max_moving_speed * -remote_controller.ch_lh +
+                                              max_moving_speed * remote_controller.ch_lh +
                                               max_rotate_speed * remote_controller.ch_rh;
 
         motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
@@ -159,19 +155,19 @@ extern "C" void control_task()
         rotate_flag = (remote_controller.ch_rh > 0.0f) - (remote_controller.ch_rh < 0.0f);
         //                              前后                            左右                          旋转
         motor3508_1_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
-                                              max_moving_speed * remote_controller.ch_lh +
+                                              max_moving_speed * -remote_controller.ch_lh +
                                               const_rotate_speed * rotate_flag;
 
         motor3508_2_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
-                                              max_moving_speed * remote_controller.ch_lh +
+                                              max_moving_speed * -remote_controller.ch_lh +
                                               const_rotate_speed * rotate_flag;
 
         motor3508_3_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
-                                              max_moving_speed * -remote_controller.ch_lh +
+                                              max_moving_speed * remote_controller.ch_lh +
                                               const_rotate_speed * rotate_flag;
 
         motor3508_4_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
-                                              max_moving_speed * -remote_controller.ch_lh +
+                                              max_moving_speed * remote_controller.ch_lh +
                                               const_rotate_speed * rotate_flag;
 
         motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);

@@ -2,12 +2,22 @@
 
 #include "cmsis_os.h"
 #include "io/buzzer/buzzer.hpp"
+#include "io/dbus/dbus.hpp"
+#include "motor/rm_motor/rm_motor.hpp"
+#include "motor/super_cap/super_cap.hpp"
 // C板
 sp::Buzzer buzzer(&htim4, TIM_CHANNEL_3, 84e6);
 
 // 达妙
 // sp::Buzzer buzzer(&htim12, TIM_CHANNEL_2, 240e6);
 
+//下面是用来检测报错的,电机报错,通信报错等
+extern sp::DBus remote_controller;
+extern sp::RM_Motor motor3508_1;
+extern sp::RM_Motor motor3508_2;
+extern sp::RM_Motor motor3508_3;
+extern sp::RM_Motor motor3508_4;
+extern sp::SuperCap supercap;
 // 播放单个音符的函数
 void play_note(float frequency, uint16_t duration_ms, float duty = 0.2)
 {
@@ -24,7 +34,8 @@ void power_on_beep()
   osDelay(50);
 }
 
-// 报错音调1 - "超级马里奥"死亡音效
+// 报错音调1 - "超级马里奥"死亡音效 对应电机报错
+//先响x声(对应id),然后响马里奥死亡音效
 void error_sound_mario_death()
 {
   // 经典的马里奥死亡音效：下行音阶
@@ -198,6 +209,41 @@ extern "C" void buzzer_task()
   //error_sound_mario_death();
   //error_sound_imperial_march();
   //error_sound_lemon_intro_sound();
+  while (true) {
+    if (!motor3508_1.is_alive(osKernelSysTick())) {
+      //power_on_beep();
+      power_on_beep();
+      error_sound_mario_death();
+    }
+    if (!motor3508_2.is_alive(osKernelSysTick())) {
+      power_on_beep();
+      power_on_beep();
+      error_sound_imperial_march();
+    }
+    if (!motor3508_3.is_alive(osKernelSysTick())) {
+      power_on_beep();
+      power_on_beep();
+      power_on_beep();
 
-  vTaskDelete(NULL);  //这里完成一遍后把自己删掉,不然就轧钢了卡死了
+      error_sound_lemon_intro_sound();
+    }
+    if (!motor3508_4.is_alive(osKernelSysTick())) {
+      power_on_beep();
+      power_on_beep();
+      power_on_beep();
+      power_on_beep();
+      error_sound_mario_death();
+    }
+    if (!supercap.is_alive(osKernelSysTick())) {
+      // 超级电容掉线报错音
+
+      error_sound_imperial_march();
+    }
+    if (!remote_controller.is_alive(osKernelSysTick())) {
+      // 遥控器掉线报错音
+
+      error_sound_lemon_intro_sound();
+    }
+    osDelay(1000);
+  }
 }
