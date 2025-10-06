@@ -14,10 +14,11 @@ struct PowerControl
   // 功率控制参数
   float safety_margin = 4.0f;        // 安全余量
   float capacitor_on_power = 20.0f;  // 电容策略功率加成
-  float correction_factor = 0.94f;   // 修正系数
+  float correction_factor = 0.92f;   // 修正系数
 
   // 功率预测值
   float power_prediction = 0.0f;
+  float realtime_power_max = 0.0f;  // 实时功率最大值
 };
 
 extern PowerControl chassis_power_control;

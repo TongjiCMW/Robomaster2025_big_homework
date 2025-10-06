@@ -80,6 +80,7 @@ float predict_power()
     power_max += chassis_power_control.capacitor_on_power;
     // 电容模式下允许更高的功率
   }
+  chassis_power_control.realtime_power_max = power_max;
   if (predicted_power > power_max - chassis_power_control.safety_margin) {
     chassis_power_control.K =
       chassis_power_control.correction_factor *
@@ -87,8 +88,7 @@ float predict_power()
        sqrt(
          (sum_torque_speed * sum_torque_speed) -
          4 * chassis_power_control.K1 * sum_torque_square *
-           (chassis_power_control.K2 * sum_speed_square + chassis_power_control.K3 -
-            (power_max - chassis_power_control.safety_margin)))) /
+           (chassis_power_control.K2 * sum_speed_square + chassis_power_control.K3 - power_max))) /
       (2 * chassis_power_control.K1 * sum_torque_square);
   }
   else {
