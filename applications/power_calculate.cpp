@@ -81,19 +81,52 @@ float predict_power()
     // 电容模式下允许更高的功率
   }
   chassis_power_control.realtime_power_max = power_max;
-  if (predicted_power > power_max - chassis_power_control.safety_margin) {
-    chassis_power_control.K =
-      chassis_power_control.correction_factor *
-      (-sum_torque_speed +
-       sqrt(
-         (sum_torque_speed * sum_torque_speed) -
-         4 * chassis_power_control.K1 * sum_torque_square *
-           (chassis_power_control.K2 * sum_speed_square + chassis_power_control.K3 - power_max))) /
-      (2 * chassis_power_control.K1 * sum_torque_square);
+
+  if (chassis_power_control.power_control_on_flag) {
+    float dt = 0.01f;  // 100Hz采样，时间间隔0.01秒
+    chassis_power_control.power_derivative =
+      (supercap.power_in - supercap.power_out - chassis_power_control.last_predicted_power) / dt;
+
+    //检测功率急剧上升
+    if (chassis_power_control.power_derivative > chassis_power_control.derivative_threshold) {
+      // 功率急剧上升时，减小修正系数
+      chassis_power_control.correction_factor = fmax(
+        chassis_power_control.correction_factor_min,
+        chassis_power_control.correction_factor -
+          chassis_power_control.correction_factor_decrease_rate);
+    }
+    else {
+      // 功率变化正常时，逐渐恢复修正系数
+      chassis_power_control.correction_factor = fmin(
+        0.92f, chassis_power_control.correction_factor +
+                 chassis_power_control.correction_factor_recovery_rate);
+    }
+
+    if (predicted_power > power_max - chassis_power_control.safety_margin) {
+      chassis_power_control.K =
+        chassis_power_control.correction_factor *
+        (-sum_torque_speed + sqrt(
+                               (sum_torque_speed * sum_torque_speed) -
+                               4 * chassis_power_control.K1 * sum_torque_square *
+                                 (chassis_power_control.K2 * sum_speed_square +
+                                  chassis_power_control.K3 - power_max))) /
+        (2 * chassis_power_control.K1 * sum_torque_square);
+    }
+    // else if (chassis_power_control.power_derivative > chassis_power_control.derivative_threshold) {
+    //   chassis_power_control.K = 0.05f;
+    // }
+    else {
+      chassis_power_control.K = 1.0f;  // 不需要缩放
+    }
   }
+
   else {
-    chassis_power_control.K = 1.0f;  // 不需要缩放
+    chassis_power_control.K = 1.0f;  // 功率控制关闭时候不需要缩放
   }
+
+  // 更新上一次的预测功率值（用于下次计算微分）
+  chassis_power_control.last_predicted_power = supercap.power_in - supercap.power_out;
+
   return predicted_power;
 }
 

@@ -23,7 +23,7 @@ float dt_inuse = 0.01f;
 float kp_inuse = 0.20f;
 float ki_inuse = 0.7f;
 float kd_inuse = 0.0f;
-float mo_inuse = 2.5f;
+float mo_inuse = 5.0f;
 float mio_inuse = 1.5f;
 float alpha_inuse = 0.01f;
 bool ang = false;
@@ -46,11 +46,11 @@ sp::PID motor3508_4_pid_speed(
   dt_inuse, kp_inuse, ki_inuse, kd_inuse, mo_inuse, mio_inuse, alpha_inuse, ang, dynamic);
 MovingData motor3508_4_data;
 
-float max_moving_speed = 6.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应轮子转速为6PI rad/s
+float max_moving_speed = 8.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应轮子转速为6PI rad/s
 float const_rotate_speed = 9.091f;  //假设遥控器右摇杆输入旋转的时候,对应轮子转速为 9.0909rad/s
 //这个转速刚好对应步兵绕整体以2rad/s旋转
 float rotate_flag = 0.0f;
-float max_rotate_speed = 8.0 * 3.14159f;  //最大旋转速度,这个是解锁了电容模式之后
+float max_rotate_speed = 14.0 * 3.14159f;  //最大旋转速度,这个是解锁了电容模式之后
 
 // 全局变量 电机目标扭矩值 - 将用于功率预测
 float motor3508_1_cmd_torque = 0.0f;
@@ -155,23 +155,36 @@ extern "C" void control_task()
         break;
 
       case sp::DBusSwitchMode::MID:
-        rotate_flag = (remote_controller.ch_rh > 0.0f) - (remote_controller.ch_rh < 0.0f);
-        //                              前后                            左右                          旋转
+        // rotate_flag = (remote_controller.ch_rh > 0.0f) - (remote_controller.ch_rh < 0.0f);
+        // //                              前后                            左右                          旋转
+        // motor3508_1_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
+        //                                       max_moving_speed * -remote_controller.ch_lh +
+        //                                       const_rotate_speed * rotate_flag;
+
+        // motor3508_2_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
+        //                                       max_moving_speed * -remote_controller.ch_lh +
+        //                                       const_rotate_speed * rotate_flag;
+
+        // motor3508_3_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
+        //                                       max_moving_speed * remote_controller.ch_lh +
+        //                                       const_rotate_speed * rotate_flag;
+
+        // motor3508_4_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
+        //                                       max_moving_speed * remote_controller.ch_lh +
+        //                                       const_rotate_speed * rotate_flag;
         motor3508_1_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
                                               max_moving_speed * -remote_controller.ch_lh +
-                                              const_rotate_speed * rotate_flag;
-
+                                              max_rotate_speed * remote_controller.ch_rh;
         motor3508_2_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
                                               max_moving_speed * -remote_controller.ch_lh +
-                                              const_rotate_speed * rotate_flag;
+                                              max_rotate_speed * remote_controller.ch_rh;
 
         motor3508_3_data.absolute_speed_set = max_moving_speed * -remote_controller.ch_lv +
                                               max_moving_speed * remote_controller.ch_lh +
-                                              const_rotate_speed * rotate_flag;
-
+                                              max_rotate_speed * remote_controller.ch_rh;
         motor3508_4_data.absolute_speed_set = max_moving_speed * remote_controller.ch_lv +
                                               max_moving_speed * remote_controller.ch_lh +
-                                              const_rotate_speed * rotate_flag;
+                                              max_rotate_speed * remote_controller.ch_rh;
 
         motor3508_1_pid_speed.calc(motor3508_1_data.absolute_speed_set, motor3508_1.speed);
         motor3508_1_data.given_torque = motor3508_1_pid_speed.out;
