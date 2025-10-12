@@ -46,11 +46,20 @@ sp::PID motor3508_4_pid_speed(
   dt_inuse, kp_inuse, ki_inuse, kd_inuse, mo_inuse, mio_inuse, alpha_inuse, ang, dynamic);
 MovingData motor3508_4_data;
 
-float max_moving_speed = 8.0f * 3.14159f;  //假设遥控器输入拉满的时候,对应轮子转速为6PI rad/s
-float const_rotate_speed = 9.091f;  //假设遥控器右摇杆输入旋转的时候,对应轮子转速为 9.0909rad/s
+float max_moving_speed = 8.0f * 3.14159f;
+//此变量对应MID档前后左右移动时候的最大转速,单位rad/s,假设遥控器输入拉满的时候,对应轮子转速为8PI rad/s
+
+float const_rotate_speed = 9.091f;
+//此变量对应在MID档自转情况下的轮子转速,单位rad/s
+//假设遥控器右摇杆输入旋转的时候,对应轮子转速为 9.0909rad/s
 //这个转速刚好对应步兵绕整体以2rad/s旋转
+
 float rotate_flag = 0.0f;
-float max_rotate_speed = 14.0 * 3.14159f;  //最大旋转速度,这个是解锁了电容模式之后
+//此变量用来表示遥控器右摇杆的方向,1表示顺时针,-1表示逆时针,0表示不旋转
+
+float max_rotate_speed = 14.0 * 3.14159f;
+//此变量对应UP档前后左右移动时候的最大转速,单位rad/s,
+//假设遥控器输入拉满的时候,对应轮子转速为14PI rad/s
 
 // 全局变量 电机目标扭矩值 - 将用于功率预测
 float motor3508_1_cmd_torque = 0.0f;
